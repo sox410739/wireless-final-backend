@@ -8,8 +8,8 @@ DEFAULT CHARACTER SET = utf8;
 
 CREATE TABLE `wireless_final`.`sensor_history` (
   `sensor_UID` VARCHAR(45) NULL,
-  `longitude` VARCHAR(20) NULL,
   `latitude` VARCHAR(20) NULL,
+  `longitude` VARCHAR(20) NULL,
   `uploaded_at` TIMESTAMP NOT NULL,
   PRIMARY KEY (`uploaded_at`),
   INDEX `sensor_history_UID_FK_idx` (`sensor_UID` ASC) VISIBLE,
