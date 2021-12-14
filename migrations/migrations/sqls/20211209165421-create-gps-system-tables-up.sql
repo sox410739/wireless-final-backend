@@ -10,8 +10,8 @@ CREATE TABLE `wireless_final`.`sensor_history` (
   `sensor_UID` VARCHAR(45) NULL,
   `latitude` VARCHAR(20) NULL,
   `longitude` VARCHAR(20) NULL,
-  `uploaded_at` TIMESTAMP NOT NULL,
-  PRIMARY KEY (`uploaded_at`),
+  `uploaded_at` TIMESTAMP NULL,
+  UNIQUE INDEX `sensor_updated_at_UK` (`sensor_UID` ASC, `uploaded_at` ASC) VISIBLE,
   INDEX `sensor_history_UID_FK_idx` (`sensor_UID` ASC) VISIBLE,
   CONSTRAINT `sensor_history_UID_FK`
     FOREIGN KEY (`sensor_UID`)
