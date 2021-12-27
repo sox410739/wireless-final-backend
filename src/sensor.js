@@ -62,7 +62,7 @@ module.exports = {
      * GPS定位資料上傳
      */
     async sensorDataUpload(req, res) {
-        if (!req.params.sensorUID || !req.body.latitude || !req.body.longitude) {
+        if (!req.params.sensorUID || !req.body.latitude || !req.body.longitude || !req.body.battery) {
             res.status(400).json( _errorFormat(400, 'NEED_REQUIRED_ARGUMENTS') );
             return;
         }
@@ -70,6 +70,7 @@ module.exports = {
         let sensorUID = req.params.sensorUID;
         let latitude = parseFloat(req.body.latitude);
         let longitude = parseFloat(req.body.longitude);
+        let battery = parseFloat(req.body.battery);
         
         if (isNaN(latitude) || latitude > 90 || latitude < -90) {
             res.status(400).json( _errorFormat(400, 'LAITUDE_FORMAT_ERROR') );
@@ -80,6 +81,11 @@ module.exports = {
             res.status(400).json( _errorFormat(400, 'LONGITUDE_FORMAT_ERROR') );
             return;
         }
+
+        if (isNaN(battery) || battery > 1 || battery < 0) {
+            res.status(400).json( _errorFormat(400, 'BATTERY_FORMAT_ERROR') );
+            return;
+        }
         
         try {
             
@@ -88,6 +94,13 @@ module.exports = {
             VALUES (?, ?, ?, ?) `;
             let params = [sensorUID, latitude, longitude, new Date()];
             
+            await gcpDB.query(SQL, params);
+
+            SQL = `UPDATE wireless_final.sensor
+            SET battery = ?, updated_at = ?
+            WHERE UID = ?`;
+            params = [battery, new Date(), sensorUID];
+
             await gcpDB.query(SQL, params);
             res.send('gps data upload successfully');
         } catch (error) {
