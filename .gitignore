@@ -1,3 +1,4 @@
 node_modules
 migrations/database.json
 config.js
+test.js

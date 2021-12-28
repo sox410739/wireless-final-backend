@@ -11,6 +11,8 @@ router.post('/sensor-sign-up', sensor.signUp);
 router.get('/sensors', sensor.getSensors);
 router.delete('/sensors/:sensorUID', sensor.deleteSensor);
 router.post('/sensors/:sensorUID/gps-data', sensor.sensorDataUpload);
+router.get('/sensors/:sensorUID/battery', sensor.getBattery);
+router.get('/sensors/:sensorUID/distance', sensor.getDistance);
 router.get('/sensors/history', sensor.getHistory);
 
 router.get('/test', (req, res) => {

@@ -1,6 +1,8 @@
 const gcpDB = require('./database/gcpDB');
 const moment = require('moment-timezone');
 
+const distanceMatrix = require('./distanceMatrix');
+
 module.exports = {
     
     async getSensors(req, res) {
@@ -134,6 +136,9 @@ module.exports = {
         }
     },
 
+    /**
+     * 刪除 sensor
+     */
     async deleteSensor(req, res) {
         try {
             let sensorUID = req.params.sensorUID;
@@ -147,10 +152,104 @@ module.exports = {
             console.log(error);
             res.status(500).json( _errorFormat(500, 'DB_ERROR') );
         }
+    },
+
+    /**
+     * 獲得電池電量
+     */
+    async getBattery(req, res) {
+        try {
+            let sensorUID = req.params.sensorUID;
+            let SQL = `SELECT battery FROM wireless_final.sensor 
+            WHERE UID = ?`;
+            let parmas = [sensorUID];
+
+            let result = await gcpDB.query(SQL, parmas);
+            if (!result.length) res.status(404).json( _errorFormat(404, 'NO_SUCH_SENSOR') );
+            else res.json(result[0]);
+
+        } catch (error) {
+            console.log(error);
+            res.status(500).json( _errorFormat(500, 'DB_ERROR') );
+        }
+    },
+
+
+    /**
+     * 獲得你和 sensor 的距離及時間資訊
+     */
+    async getDistance(req, res) {
+        try {
+            if (!req.params.sensorUID || !req.query.your_latitude || !req.query.your_longitude) {
+                res.status(400).json( _errorFormat(400, 'NEED_REQUIRED_ARGUMENTS') );
+                return;
+            } 
+
+            let sensorUID = req.params.sensorUID;
+            let your_latitude = req.query.your_latitude;
+            let your_longitude = req.query.your_longitude;
+            let SQL = `SELECT latitude, longitude, uploaded_at FROM wireless_final.sensor_history
+            WHERE sensor_UID = ?
+            ORDER BY uploaded_at DESC
+            LIMIT 1`;
+            let params = [sensorUID];
+            let result = await gcpDB.query(SQL, params);
+            if (!result.length) {
+                res.status(404).json( _errorFormat(404, 'NO_THIS_SENSOR_DATA') );
+                return;
+            }
+            
+            let sensor_latitude = result[0].latitude;
+            let sensor_longitude = result[0].longitude;
+            let lastUpdate = result[0].uploaded_at;
+            console.log(sensor_latitude, sensor_longitude, your_latitude, your_longitude)
+
+            result = await distanceMatrix(your_latitude + ', ' + your_longitude, 
+                sensor_latitude + ', ' + sensor_longitude);
+            
+            if (result.rows[0].elements[0].status !== 'OK') {
+                res.status(400).json( _errorFormat(404, result.rows[0].elements[0].status) );
+                return;
+            }
+
+            res.json({
+                your_address: result.destination_addresses[0],
+                sensor_address: result.origin_addresses[0],
+                distance: result.rows[0].elements[0].distance,
+                duration: result.rows[0].elements[0].duration,
+                last_update: _lastUpdateFormat(lastUpdate)
+            })
+            
+        } catch (error) {
+            console.log(error);
+            res.status(500).json( _errorFormat(500, 'INTERNAL_ERROR') );
+        }
     }
 }
 
 
+
+function _lastUpdateFormat(last) {
+    let now = moment.tz(new Date, 'Asia/Taipei');
+    last = moment.tz(last, 'Asia/Taipei');
+
+    let diff_month = now.diff(last, 'month');
+    if (diff_month) return `${diff_month}個月前`;
+
+    let diff_day = now.diff(last, 'day');
+    if (diff_day) return `${diff_day}天前`;
+
+    let diff_hour = now.diff(last, 'hour');
+    if (diff_hour) return `${diff_hour}小時前`;
+
+    let diff_minute = now.diff(last, 'minute');
+    if (diff_minute) return `${diff_minute}分鐘前`;
+
+    let diff_second = now.diff(last, 'second');
+    if (diff_second) return `${diff_second}秒前`;
+
+    return '';
+}
 
 function _errorFormat(code, message) {
     return {
