@@ -213,8 +213,8 @@ module.exports = {
             }
 
             res.json({
-                your_address: result.destination_addresses[0],
-                sensor_address: result.origin_addresses[0],
+                your_address: result.origin_addresses[0],
+                sensor_address: result.destination_addresses[0],
                 distance: result.rows[0].elements[0].distance,
                 duration: result.rows[0].elements[0].duration,
                 last_update: _lastUpdateFormat(lastUpdate)
