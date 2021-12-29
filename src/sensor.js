@@ -224,11 +224,58 @@ module.exports = {
             console.log(error);
             res.status(500).json( _errorFormat(500, 'INTERNAL_ERROR') );
         }
+    },
+
+
+    /**
+     * 獲取感測器足跡
+     */
+    async getFootPrint(req, res) {
+        try {
+            if (!req.params.sensorUID || !req.query.date) {
+                res.status(400).json( _errorFormat(400, 'NEED_REQUIRED_ARGUMENTS') );
+                return;
+            }
+
+            let sensorUID = req.params.sensorUID;
+            let date = moment.tz(req.query.date + ' 00:00:00', 'Asia/Taipei').toDate();
+            let dateEnd = moment.tz(date, 'Asia/Taipei').add(1, 'day').toDate();
+            let SQL = `SELECT latitude, longitude, uploaded_at
+            FROM wireless_final.sensor_history
+            WHERE sensor_UID = ? AND uploaded_at BETWEEN ? AND ?
+            ORDER BY uploaded_at ASC`;
+            let params = [sensorUID, date, dateEnd];
+
+            let result = await gcpDB.query(SQL, params);
+            if (!result.length) {
+                res.json(result);
+                return;
+            }
+            
+            result.forEach(element => {
+                element.uploaded_at = moment.tz(element.uploaded_at, 'Asia/Taipei').format('YYYY-MM-DD HH:mm:ss');
+            })
+            let current = 0;
+            while (current < result.length-1) {
+                let diff = moment.tz(result[current+1].uploaded_at, 'Asia/Taipei').diff(moment.tz(result[current].uploaded_at, 'Asia/Taipei'), 'minute');
+
+                if (diff < 40) result.splice(current+1, 1);
+                else current += 1;
+            }
+
+            res.json(result);
+            
+        } catch (error) {
+            console.log(error);
+            res.status(500).json( _errorFormat(500, 'INTERNAL_ERROR') );
+        }
     }
 }
 
 
-
+/**
+ * 與現在相差了多久
+ */
 function _lastUpdateFormat(last) {
     let now = moment.tz(new Date, 'Asia/Taipei');
     last = moment.tz(last, 'Asia/Taipei');
