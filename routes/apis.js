@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const sensor = require('../src/sensor');
+const weather = require('../src/weather');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
@@ -15,6 +16,8 @@ router.get('/sensors/:sensorUID/battery', sensor.getBattery);
 router.get('/sensors/:sensorUID/distance', sensor.getDistance);
 router.get('/sensors/:sensorUID/footprint', sensor.getFootPrint);
 router.get('/sensors/history', sensor.getHistory);
+
+router.get('/weather', weather.getWheather);
 
 router.get('/test', (req, res) => {
   res.send('ok');
