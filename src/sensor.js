@@ -217,7 +217,9 @@ module.exports = {
                 sensor_address: result.destination_addresses[0],
                 distance: result.rows[0].elements[0].distance,
                 duration: result.rows[0].elements[0].duration,
-                last_update: _lastUpdateFormat(lastUpdate)
+                last_update: _lastUpdateFormat(lastUpdate),
+                latitude: sensor_latitude,
+                longitude: sensor_longitude
             })
             
         } catch (error) {
