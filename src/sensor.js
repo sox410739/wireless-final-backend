@@ -228,6 +228,37 @@ module.exports = {
         }
     },
 
+    async getLocation(req, res) {
+        try {
+            if (!req.params.sensorUID) {
+                res.status(400).json( _errorFormat(400, 'NEED_REQUIRED_ARGUMENTS') );
+                return;
+            } 
+            let sensorUID = req.params.sensorUID;
+
+            let SQL = `SELECT latitude, longitude, uploaded_at FROM wireless_final.sensor_history
+            WHERE sensor_UID = ?
+            ORDER BY uploaded_at DESC
+            LIMIT 1`;
+            let params = [sensorUID];
+            let result = await gcpDB.query(SQL, params);
+            if (!result.length) {
+                res.status(404).json( _errorFormat(404, 'NO_THIS_SENSOR_DATA') );
+                return;
+            }
+
+            res.json({
+                latitude: result[0].latitude,
+                longitude: result[0].longitude,
+                last_update: _lastUpdateFormat(result[0].uploaded_at)
+            })
+
+        } catch (error) {
+            console.log(error);
+            res.status(500).json( _errorFormat(500, 'INTERNAL_ERROR') );
+        }
+    },
+
 
     /**
      * 獲取感測器足跡
