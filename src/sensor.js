@@ -289,7 +289,7 @@ module.exports = {
             while (current < result.length-1) {
                 let diff = moment.tz(result[current+1].uploaded_at, 'Asia/Taipei').diff(moment.tz(result[current].uploaded_at, 'Asia/Taipei'), 'minute');
                 
-                if (diff < 40) result.splice(current+1, 1);
+                if (diff < 59) result.splice(current+1, 1);
                 else current += 1;
             }
             result.forEach(element => {
