@@ -293,7 +293,7 @@ module.exports = {
                 else current += 1;
             }
             result.forEach(element => {
-                element.uploaded_at = moment.tz(element.uploaded_at, 'Asia/Taipei').format('HH:mm:ss');
+                element.uploaded_at = moment.tz(element.uploaded_at, 'Asia/Taipei').format('HH點mm分');
             })
 
             res.json(result);
